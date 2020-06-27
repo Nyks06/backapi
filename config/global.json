@@ -1,0 +1,22 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "postgres",
+        "dbname": "webcore"
+    },
+    "http": {
+        "port": 8080
+    },
+    "mailer": {
+        "from_mail": "contact@yolirish.com",
+        "from_user": "Youenn Support",
+        "mailjet_api_key": "29e7c8fb4c539be22f49d0b5abdd3700",
+        "mailjet_api_secret": "f9dd2fb91fa19b4ee659a76098c04e9b"
+    },
+    "stripe": {
+        "secret_key": "sk_live_XBUXrOjiBkujI7lEuVei5Vj200FJ3qVnLH"
+    },
+    "domain_url": "https://www.youennya.com"
+}

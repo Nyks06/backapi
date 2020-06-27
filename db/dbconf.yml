@@ -1,0 +1,7 @@
+development:
+  driver: postgres
+  open: $POSTGRESQL_DATASOURCE
+
+test:
+  driver: postgres
+  open: $POSTGRESQL_DATASOURCE
