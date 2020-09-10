@@ -18,7 +18,7 @@ func (t *Tokenizer) Tokenize(args map[string]interface{}) (string, error) {
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), params)
 	tok, err := token.SignedString([]byte(t.SigningKey))
 	if err != nil {
-		return "", webcore.NewInternalServerError("cannot create a token")
+		return "", backapi.NewInternalServerError("cannot create a token")
 	}
 
 	return tok, nil
@@ -30,7 +30,7 @@ func (t *Tokenizer) Parse(tokenStr string) (map[string]interface{}, error) {
 	})
 
 	if err != nil || !token.Valid {
-		return nil, webcore.NewInternalServerError("Impossible to parse the given token")
+		return nil, backapi.NewInternalServerError("Impossible to parse the given token")
 	}
 
 	claims := token.Claims.(jwt.MapClaims)

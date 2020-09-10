@@ -1,4 +1,4 @@
-package webcore
+package backapi
 
 import "github.com/pkg/errors"
 

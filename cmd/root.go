@@ -6,18 +6,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/nyks06/backapi/pg"
-	webcore "github.com/nyks06/backapi"
+	"github.com/nyks06/backapi"
 	"github.com/nyks06/backapi/http"
-	"github.com/nyks06/backapi/stripe"
+	"github.com/nyks06/backapi/pg"
 
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
 	"github.com/spf13/cobra"
-
-	mailer "github.com/nyks06/backapi/mailjet"
-
-	"github.com/stripe/stripe-go/client"
 )
 
 var (
@@ -31,7 +26,7 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 }
 
-func initStoreManager() (*webcore.StoreManager, error) {
+func initStoreManager() (*backapi.StoreManager, error) {
 	store, err := pg.NewStore(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, err
@@ -51,58 +46,18 @@ func initStoreManager() (*webcore.StoreManager, error) {
 		DB: store.DB,
 	}
 
-	ticketStore := &pg.TicketStore{
-		DB: store.DB,
-	}
-	ticketFinder := &pg.TicketFinder{
-		DB: store.DB,
-	}
-
-	pronoStore := &pg.PronosticStore{
-		DB: store.DB,
-	}
-	pronoFinder := &pg.PronosticFinder{
-		DB: store.DB,
-	}
-
-	sportStore := &pg.SportStore{
-		DB: store.DB,
-	}
-	sportFinder := &pg.SportFinder{
-		DB: store.DB,
-	}
-
-	competitionStore := &pg.CompetitionStore{
-		DB: store.DB,
-	}
-	competitionFinder := &pg.CompetitionFinder{
-		DB: store.DB,
-	}
-
-	return &webcore.StoreManager{
+	return &backapi.StoreManager{
 		UserStore:  userStore,
 		UserFinder: userFinder,
 
 		SessionStore:  sessionStore,
 		SessionFinder: sessionFinder,
-
-		TicketStore:  ticketStore,
-		TicketFinder: ticketFinder,
-
-		PronosticStore:  pronoStore,
-		PronosticFinder: pronoFinder,
-
-		SportStore:  sportStore,
-		SportFinder: sportFinder,
-
-		CompetitionStore:  competitionStore,
-		competitionFinder: competitionFinder,
 	}, nil
 }
 
 func runServer(cmd *cobra.Command, args []string) {
 	//config setup
-	cfg := webcore.Config{}
+	cfg := backapi.Config{}
 	if err := confita.NewLoader(file.NewBackend(configPath)).Load(context.Background(), &cfg); err != nil {
 		panic(err)
 	}
@@ -112,43 +67,16 @@ func runServer(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	mailer := mailer.NewMailer(cfg.Mailer.FromMail, cfg.Mailer.FromUser, cfg.Mailer.MailjetAPIKey, cfg.Mailer.MailjetAPISecret)
-	sc := &client.API{}
-	sc.Init(cfg.Stripe.SecretKey, nil)
-	paymentClient := stripe.NewPaymentClient(sc)
+	userService := &backapi.UserService{
+		StoreManager: storeManager,
+	}
 
-	// Create Services with store
-	APIService := &webcore.APIService{
-		UserStore:  userStore,
-		UserFinder: userFinder,
-
-		TicketStore:  ticketStore,
-		TicketFinder: ticketFinder,
-
-		PronosticsStore:  pronoStore,
-		PronosticsFinder: pronoFinder,
-
-		SportsStore:  sportStore,
-		SportsFinder: sportFinder,
-
-		PlayersStore:  playerStore,
-		PlayersFinder: playersFinder,
-
-		NewsStore:  newsStore,
-		NewsFinder: newsFinder,
-
-		CompetitionsStore:  competitionStore,
-		CompetitionsFinder: competitionFinder,
-
-		SessionFinder: sessionFinder,
-		SessionStore:  sessionStore,
-
-		Mailer:        mailer,
-		PaymentClient: paymentClient,
+	sessionService := &backapi.SessionService{
+		StoreManager: storeManager,
 	}
 
 	// Load Server with services
-	s := http.NewServer(APIService)
+	s := http.NewServer(userService, sessionService, cfg.HTTP.Port)
 	if err := s.Setup(); err != nil {
 		panic(err)
 	}
@@ -176,7 +104,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version of the core.",
 	Long:  "Print the current version used to run the server in the given binary",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Core Server Version : %s\n", webcore.Version)
+		fmt.Printf("Core Server Version : %s\n", backapi.Version)
 	},
 }
 

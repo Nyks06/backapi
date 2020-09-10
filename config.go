@@ -1,7 +1,8 @@
-package webcore
+package backapi
 
 type Config struct {
 	Database  CfgDatabase `json:"database"`
+	HTTP      CfgHTTP     `json:"http"`
 	Mailer    CfgMailer   `json:"mailer"`
 	Stripe    CfgStripe   `json:"stripe"`
 	DomainURL string      `json:"domain_url"`
@@ -13,6 +14,10 @@ type CfgDatabase struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	DBName   string `json:"dbname"`
+}
+
+type CfgHTTP struct {
+	Port string `json:"port"`
 }
 
 type CfgMailer struct {

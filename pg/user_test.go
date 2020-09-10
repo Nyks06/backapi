@@ -16,7 +16,7 @@ func TestUser_Create(t *testing.T) {
 		DB: db,
 	}
 
-	u := &webcore.User{
+	u := &backapi.User{
 		Firstname:   "Vincent",
 		Lastname:    "Vielle",
 		Username:    "Nykxs",
@@ -49,7 +49,7 @@ func TestUser_FindByEmail(t *testing.T) {
 		DB: db,
 	}
 
-	u := &webcore.User{
+	u := &backapi.User{
 		Firstname:   "Vincent",
 		Lastname:    "Vielle",
 		Username:    "Nykxs",
@@ -61,7 +61,7 @@ func TestUser_FindByEmail(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored)
 
-	u2 := &webcore.User{
+	u2 := &backapi.User{
 		Firstname:   "Vincent",
 		Lastname:    "Vielle",
 		Username:    "Nykxs",
@@ -73,7 +73,7 @@ func TestUser_FindByEmail(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored2)
 
-	u3 := &webcore.User{
+	u3 := &backapi.User{
 		Firstname:   "Vincent",
 		Lastname:    "Vielle",
 		Username:    "Nykxs",
@@ -109,7 +109,7 @@ func TestUser_FindByID(t *testing.T) {
 		DB: db,
 	}
 
-	u := &webcore.User{
+	u := &backapi.User{
 		Email:       "vincent_phone@gmail.com",
 		PhoneNumber: "+33611223344",
 		Password:    "123pass",
@@ -118,7 +118,7 @@ func TestUser_FindByID(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored)
 
-	u2 := &webcore.User{
+	u2 := &backapi.User{
 		Email:       "vincent_phone2@gmail.com",
 		PhoneNumber: "+33611223355",
 		Password:    "123pass",
@@ -127,7 +127,7 @@ func TestUser_FindByID(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored2)
 
-	u3 := &webcore.User{
+	u3 := &backapi.User{
 		Email:       "vincent_phone3@gmail.com",
 		PhoneNumber: "+33611223366",
 		Password:    "123pass",
@@ -157,7 +157,7 @@ func TestUser_ListEmails(t *testing.T) {
 		DB: db,
 	}
 
-	u := &webcore.User{
+	u := &backapi.User{
 		Email:       "vincent_test@gmail.com",
 		PhoneNumber: "+33611223344",
 		Password:    "123pass",
@@ -166,7 +166,7 @@ func TestUser_ListEmails(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored)
 
-	u2 := &webcore.User{
+	u2 := &backapi.User{
 		Email:       "vincent_test@gmail.com",
 		PhoneNumber: "+33611223355",
 		Password:    "123pass",
@@ -175,7 +175,7 @@ func TestUser_ListEmails(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored2)
 
-	u3 := &webcore.User{
+	u3 := &backapi.User{
 		Email:       "vincent_test@gmail.com",
 		PhoneNumber: "+33611223366",
 		Password:    "123pass",
@@ -200,7 +200,7 @@ func TestUser_ListPhoneNumbers(t *testing.T) {
 		DB: db,
 	}
 
-	u := &webcore.User{
+	u := &backapi.User{
 		Email:       "vincent_test@gmail.com",
 		PhoneNumber: "+33611223344",
 		Password:    "123pass",
@@ -209,7 +209,7 @@ func TestUser_ListPhoneNumbers(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored)
 
-	u2 := &webcore.User{
+	u2 := &backapi.User{
 		Email:       "vincent_test@gmail.com",
 		PhoneNumber: "+33611223355",
 		Password:    "123pass",
@@ -218,7 +218,7 @@ func TestUser_ListPhoneNumbers(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, userStored2)
 
-	u3 := &webcore.User{
+	u3 := &backapi.User{
 		Email:       "vincent_test@gmail.com",
 		PhoneNumber: "+33611223366",
 		Password:    "123pass",

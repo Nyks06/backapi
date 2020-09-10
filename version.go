@@ -1,4 +1,4 @@
-package webcore
+package backapi
 
 const (
 	// Version represents the current version of the project

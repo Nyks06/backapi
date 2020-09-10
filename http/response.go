@@ -3,13 +3,13 @@ package http
 import "net/http"
 
 const (
-	_messageSuccess                 = "Success"
-	_messageBindError               = "Unable to bind data - malformated parameters"
-	_messageValidationError         = "Unable to validate data"
-	_messageInternalServerError     = "Internal Server Error - please try again later"
-	_messageUserAlreadyCreatedError = "Conflict - User Already Exist"
-	_messageGenericBadRequestError  = "Bad Request Error - please confirm your request and retry"
-	_messageUnauthorizedError       = "Unauthorized Error - you are not authorized to do that"
+	_messageSuccess                 = "SUCCESS"
+	_messageBindError               = "MALFORMATED_PARAMETERS"
+	_messageValidationError         = "INVALID_PARAMETERS"
+	_messageInternalServerError     = "INTERNAL_SERVER_ERROR"
+	_messageUserAlreadyCreatedError = "CONFLICT_ALREADY_EXIST"
+	_messageGenericBadRequestError  = "BAD_REQUEST_ERROR"
+	_messageUnauthorizedError       = "UNAUTHORIZED_ERROR"
 )
 
 type HTTPResponseStatus struct {
@@ -32,6 +32,9 @@ func HandleHTTPResponse(statusCode int, message string, data interface{}) HTTPRe
 		Data: data,
 	}
 
+	// TODO : Better handling - Currently relying only on the HTTP status code
+	// 200, 201, 204 are equivalent to no error
+	// all other status code are equivalent to error
 	if statusCode != http.StatusOK && statusCode != http.StatusCreated && statusCode != http.StatusNoContent {
 		resp.Status.Error = true
 	}

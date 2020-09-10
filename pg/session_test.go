@@ -17,7 +17,7 @@ func TestSession_Create(t *testing.T) {
 		DB: db,
 	}
 
-	s := &webcore.Session{
+	s := &backapi.Session{
 		UserID:    "user-123",
 		ExpiresAt: time.Now().Add(48 * time.Hour),
 	}
@@ -42,7 +42,7 @@ func TestSession_FindByID(t *testing.T) {
 		DB: db,
 	}
 
-	s := &webcore.Session{
+	s := &backapi.Session{
 		UserID:    "user-123",
 		ExpiresAt: time.Now().Add(48 * time.Hour),
 	}
@@ -50,7 +50,7 @@ func TestSession_FindByID(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, sessionStored)
 
-	s2 := &webcore.Session{
+	s2 := &backapi.Session{
 		UserID:    "user-123",
 		ExpiresAt: time.Now().Add(48 * time.Hour),
 	}
@@ -58,7 +58,7 @@ func TestSession_FindByID(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, sessionStored2)
 
-	s3 := &webcore.Session{
+	s3 := &backapi.Session{
 		UserID:    "user-124",
 		ExpiresAt: time.Now().Add(48 * time.Hour),
 	}

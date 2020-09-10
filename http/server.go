@@ -2,46 +2,52 @@ package http
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
-	webcore "github.com/nyks06/backapi"
+	"github.com/nyks06/backapi"
 )
 
 const (
 	// ContextKeyCurrentUser defines the name of the key in our echo.Context to get CurrentUser if any
-	ContextKeyCurrentUser = "cUser_"
-	// CookieSession defines the name of the cookie that is created for each user's session
-	CookieSession = "sess_"
-	// CookieFlash defines the name of the cookie that is created for each flash we want to display
-	CookieFlash = "flash_"
+	ContextKeyCurrentUser = "CUser_"
+	// ContextKeySession defines the name of the key in our echo.Contexdt to get Session of the CurrentUser if any
+	ContextKeySession = "Session_"
+	// HeaderKeyAuthorization defines the name of the header that should be set in the request to authentify the user
+	HeaderKeyAuthorization = "X-Authorization"
 )
 
 type Server struct {
 	Router *echo.Echo
+	Port   string
 
-	Middlewares *middlewares
-	APIService  *webcore.APIService
+	Middlewares    *middlewares
+	UserService    *backapi.UserService
+	SessionService *backapi.SessionService
 }
 
-func NewServer(APISe *webcore.APIService) *Server {
+func NewServer(
+	UserService *backapi.UserService,
+	SessionService *backapi.SessionService,
+	port string) *Server {
 	return &Server{
 		Router: echo.New(),
-
+		Port:   port,
 		Middlewares: &middlewares{
-			APIService: APISe,
+			UserService:    UserService,
+			SessionService: SessionService,
 		},
-		APIService: APISe,
+		UserService:    UserService,
+		SessionService: SessionService,
 	}
 }
 
-func (s *Server) SetupMiddlewares() error {
+func (s *Server) setupMiddlewares() error {
 	// SetContext middleware is a mandatory one that SHOULD be called in first
 	// It stores the stdlib context in the echo one with values potentially required later
-	s.Router.Use(s.Middlewares.SetContext)
+	// s.Router.Use(s.Middlewares.SetContext)
 
 	// Handling of the logger configuration
 	s.Router.Use(middleware.Logger())
@@ -50,12 +56,12 @@ func (s *Server) SetupMiddlewares() error {
 	s.Router.Logger.SetLevel(log.DEBUG)
 
 	// Handling of the RequestID generation
-	// s.Router.Use(middleware.RequestID())
+	s.Router.Use(middleware.RequestID())
 
 	// Add custom middlewares if any here
 
-	// Auth middleware will store the CurrentUser in the stdlib context if possible
-	// s.Router.Use(s.Middlewares.Auth)
+	// Auth middleware will store the CurrentUser in the context if possible
+	s.Router.Use(s.Middlewares.Auth)
 
 	return nil
 }
@@ -72,113 +78,40 @@ func (s *Server) Setup() error {
 		},
 	}))
 
-	if err := s.SetupMiddlewares(); err != nil {
+	if err := s.setupMiddlewares(); err != nil {
 		return err
 	}
 
 	// Defines Handlers
 	userHandler := UserHandler{
-		APIService: s.APIService,
+		UserService: s.UserService,
 	}
 
 	sessionHandler := SessionHandler{
-		APIService: s.APIService,
+		SessionService: s.SessionService,
 	}
 
-	// ticketHandler := TicketHandler{
-	// 	APIService: s.APIService,
-	// }
-
-	// sportHandler := SportHandler{
-	// 	APIService: s.APIService,
-	// }
-
-	// competitionHandler := CompetitionHandler{
-	// 	APIService: s.APIService,
-	// }
-
-	// pronosticHandler := PronosticHandler{
-	// 	APIService: s.APIService,
-	// }
-
-	// subscriptionHandler := SubscriptionHandler{
-	// 	APIService: s.APIService,
-	// }
-
-	// contactHandler := ContactHandler{
-	// 	APIService: s.APIService,
-	// }
-
 	//API Related routes
-	apiV1Router := s.Router.Group("/api/v1")
+	apiV1Router := s.Router.Group("/api/v1", s.Middlewares.Auth)
 
 	// Users related routes
 	apiV1Router.POST("/users", userHandler.CreateUser)
-	apiV1Router.GET("/users", userHandler.ListUsers)
+	apiV1Router.GET("/users/me", userHandler.GetCUser, s.Middlewares.MustBeAuth)
+	// apiV1Router.GET("/users", userHandler.ListUsers)
 	// apiV1Router.POST("/users/details", userHandler.UserUpdateDetails, s.Middlewares.MustBeAuth)
-	// apiV1Router.POST("/users/contact", userHandler.UserUpdateContactSettings, s.Middlewares.MustBeAuth)
-	// apiV1Router.POST("/users/change_password", userHandler.UserChangePassword, s.Middlewares.MustBeAuth)
-	apiV1Router.GET("/users/me", userHandler.GetCUser)
-	apiV1Router.GET("/users/:id", userHandler.GetUser)
+	apiV1Router.POST("/users/me/change_password", userHandler.UserChangePassword, s.Middlewares.MustBeAuth)
+	apiV1Router.POST("/users/change_email", userHandler.UserChangeEmail, s.Middlewares.MustBeAuth)
+	// apiV1Router.GET("/users/:id", userHandler.GetUser)
 
 	// Session related routes
-	apiV1Router.POST("/login", sessionHandler.CreateSession)
-	apiV1Router.POST("/logout", sessionHandler.RemoveSession, s.Middlewares.MustBeAuth)
-
-	// apiV1Router.POST("/subscription", subscriptionHandler.Create, s.Middlewares.MustBeAuth)
-	// apiV1Router.GET("/users/subscription", subscriptionHandler.Get, s.Middlewares.MustBeAuth)
-	// apiV1Router.DELETE("/users/subscription/:id", subscriptionHandler.Cancel, s.Middlewares.MustBeAuth)
-
-	// apiV1Router.POST("/ticket", ticketHandler.CreateTicket)
-	// apiV1Router.GET("/ticket/:id", ticketHandler.GetTicket)
-	// apiV1Router.DELETE("/ticket/:id", ticketHandler.DeleteTicket)
-	// apiV1Router.POST("/ticket/:id", ticketHandler.UpdateTicket)
-	// apiV1Router.GET("/ticket", ticketHandler.ListTicket)
-
-	// apiV1Router.POST("/sport", sportHandler.CreateSport)
-	// apiV1Router.GET("/sport/:id", sportHandler.GetSport)
-	// apiV1Router.DELETE("/sport/:id", sportHandler.DeleteSport)
-	// apiV1Router.POST("/sport/:id", ticketHandler.UpdateSport)
-	// apiV1Router.GET("/sport", sportHandler.ListSport)
-
-	// apiV1Router.POST("/competition", competitionHandler.CreateCompetition)
-	// apiV1Router.GET("/competition/:id", competitionHandler.GetCompetition)
-	// apiV1Router.DELETE("/competition/:id", competitionHandler.DeleteCompetition)
-	// apiV1Router.POST("/competition/:id", ticketHandler.UpdateSport)
-	// apiV1Router.GET("/competition", competitionHandler.ListCompetition)
-
-	// apiV1Router.POST("/ticket", ticketHandler.CreateTicket)
-	// apiV1Router.GET("/ticket/:id", ticketHandler.GetTicket)
-	// apiV1Router.DELETE("/ticket/:id", ticketHandler.DeleteTicket)
-	// apiV1Router.POST("/ticket/:id", ticketHandler.UpdateTicket)
-	// apiV1Router.GET("/ticket", ticketHandler.ListTicket)
-
-	// apiV1Router.POST("/pronostic", pronosticHandler.CreatePronostic)
-	// apiV1Router.DELETE("/pronostic/:id", pronosticHandler.DeletePronostic)
-	// apiV1Router.GET("/pronostic/:id", pronosticHandler.GetPronostic)
-	// apiV1Router.GET("/pronostic", pronosticHandler.ListPronostic)
-	// apiV1Router.POST("/pronostic/:id", pronosticHandler.UpdatePronostic)
-
-	// apiV1Router.POST("/contact", contactHandler.SendMessage)
+	apiV1Router.POST("/session", sessionHandler.CreateSession)
+	apiV1Router.DELETE("/session", sessionHandler.RemoveSession, s.Middlewares.MustBeAuth)
 
 	return nil
 }
 
 func (s *Server) Start() error {
-
-	// s.Router.AutoTLSManager.HostPolicy = autocert.HostWhitelist("www.yolirish.com", "yolirish.com")
-	// s.Router.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
-	// if err := s.Router.StartAutoTLS(":443"); err != nil {
-	// 	return err
-	// }
-
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
-	// Only for test purpose on localhost
-	if err := s.Router.Start(":" + port); err != nil {
+	if err := s.Router.Start(":" + s.Port); err != nil {
 		return err
 	}
 	return nil

@@ -23,8 +23,8 @@ type SessionRecord struct {
 	ExpiresAt time.Time `db:"expires_at"`
 }
 
-func (s *SessionRecord) toSession() *webcore.Session {
-	return &webcore.Session{
+func (s *SessionRecord) toSession() *backapi.Session {
+	return &backapi.Session{
 		ID:        s.ID,
 		UserID:    s.UserID,
 		CreatedAt: s.CreatedAt,
@@ -33,7 +33,7 @@ func (s *SessionRecord) toSession() *webcore.Session {
 	}
 }
 
-func newSessionRecord(s *webcore.Session) *SessionRecord {
+func newSessionRecord(s *backapi.Session) *SessionRecord {
 	return &SessionRecord{
 		ID:        s.ID,
 		UserID:    s.UserID,
@@ -49,7 +49,7 @@ type SessionStore struct {
 }
 
 // Create tries to insert in DB a user
-func (s *SessionStore) Create(sess *webcore.Session) (*webcore.Session, error) {
+func (s *SessionStore) Create(sess *backapi.Session) (*backapi.Session, error) {
 	rec := newSessionRecord(sess)
 
 	namedStmt, err := s.DB.PrepareNamed(`
@@ -62,7 +62,7 @@ func (s *SessionStore) Create(sess *webcore.Session) (*webcore.Session, error) {
 		RETURNING ` + sessionColumns)
 
 	if err != nil {
-		return nil, webcore.NewInternalServerError(err.Error())
+		return nil, backapi.NewInternalServerError(err.Error())
 	}
 
 	defer namedStmt.Close()
@@ -70,7 +70,7 @@ func (s *SessionStore) Create(sess *webcore.Session) (*webcore.Session, error) {
 	session := new(SessionRecord)
 	err = namedStmt.Get(session, *rec)
 	if err != nil {
-		return nil, webcore.NewInternalServerError(err.Error())
+		return nil, backapi.NewInternalServerError(err.Error())
 	}
 
 	return session.toSession(), nil
@@ -79,7 +79,7 @@ func (s *SessionStore) Create(sess *webcore.Session) (*webcore.Session, error) {
 func (s *SessionStore) Delete(ID string) error {
 	_, err := s.DB.Exec(`DELETE FROM sessions WHERE id=$1`, ID)
 	if err != nil {
-		return webcore.NewInternalServerError(err.Error())
+		return backapi.NewInternalServerError(err.Error())
 	}
 
 	return nil
@@ -88,7 +88,7 @@ func (s *SessionStore) Delete(ID string) error {
 func (s *SessionStore) DeleteAllForUserID(UserID string) error {
 	_, err := s.DB.Exec(`DELETE FROM sessions WHERE user_id=$1`, UserID)
 	if err != nil {
-		return webcore.NewInternalServerError(err.Error())
+		return backapi.NewInternalServerError(err.Error())
 	}
 
 	return nil
@@ -100,15 +100,15 @@ type SessionFinder struct {
 }
 
 // ByID returns the associated session stored with, as ID, the parameter given
-func (s *SessionFinder) ByID(id string) (*webcore.Session, error) {
+func (s *SessionFinder) ByID(id string) (*backapi.Session, error) {
 	sess := new(SessionRecord)
 
 	err := s.DB.Get(sess, `SELECT `+sessionColumns+` FROM sessions WHERE id=$1 LIMIT 1`, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, webcore.NewNotFoundError(err.Error())
+			return nil, backapi.NewNotFoundError(err.Error())
 		}
-		return nil, webcore.NewInternalServerError(err.Error())
+		return nil, backapi.NewInternalServerError(err.Error())
 	}
 	return sess.toSession(), nil
 }
