@@ -1,18 +1,16 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/nyks06/backapi"
 	"github.com/nyks06/backapi/http"
 	"github.com/nyks06/backapi/pg"
-
-	"github.com/heetch/confita"
-	"github.com/heetch/confita/backend/file"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -55,18 +53,28 @@ func initStoreManager() (*backapi.StoreManager, error) {
 	}, nil
 }
 
+func initConfig() error {
+	viper.SetConfigName("global")
+	viper.SetConfigType("json")
+	viper.AddConfigPath(configPath)
+	err := viper.ReadInConfig()
+	return err
+}
+
 func runServer(cmd *cobra.Command, args []string) {
-	//config setup
-	cfg := backapi.Config{}
-	if err := confita.NewLoader(file.NewBackend(configPath)).Load(context.Background(), &cfg); err != nil {
+	// Initialize the configuration for the app
+	err := initConfig()
+	if err != nil {
 		panic(err)
 	}
 
+	// Initialize the stores
 	storeManager, err := initStoreManager()
 	if err != nil {
 		panic(err)
 	}
 
+	// Create the different services
 	userService := &backapi.UserService{
 		StoreManager: storeManager,
 	}
@@ -75,8 +83,8 @@ func runServer(cmd *cobra.Command, args []string) {
 		StoreManager: storeManager,
 	}
 
-	// Load Server with services
-	s := http.NewServer(userService, sessionService, cfg.HTTP.Port)
+	// Initialize and start the HTTP server
+	s := http.NewServer(userService, sessionService)
 	if err := s.Setup(); err != nil {
 		panic(err)
 	}

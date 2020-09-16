@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/nyks06/backapi"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -28,13 +29,14 @@ type Server struct {
 	SessionService *backapi.SessionService
 }
 
+// NewServer returns a new instantiated Server with all the fields filled
+// The logic and configuration itself is done only on the Setup step
 func NewServer(
 	UserService *backapi.UserService,
-	SessionService *backapi.SessionService,
-	port string) *Server {
+	SessionService *backapi.SessionService) *Server {
 	return &Server{
 		Router: echo.New(),
-		Port:   port,
+		Port:   viper.GetString("http.port"),
 		Middlewares: &middlewares{
 			UserService:    UserService,
 			SessionService: SessionService,
@@ -91,7 +93,8 @@ func (s *Server) Setup() error {
 		SessionService: s.SessionService,
 	}
 
-	//API Related routes
+	// Create a group unders /api/v1 using the Auth middleware
+	// All the requests will then be potentially authenticated if the correct info are supplied
 	apiV1Router := s.Router.Group("/api/v1", s.Middlewares.Auth)
 
 	// Users related routes
