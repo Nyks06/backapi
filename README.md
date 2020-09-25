@@ -35,6 +35,7 @@ Adding a new entity is really straightforward and should only require very speci
 - Add the entity in the migration / model (under the PG folder.)
 - Add the corresponding part in the root of the project (corresponding to the controller)
 - Finally add the corresponding endpoints in the HTTP part
+
 _More detailled version to come..._
 
 ## Other
