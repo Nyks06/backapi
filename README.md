@@ -29,6 +29,14 @@ Currently, the project contains :
 - [x] **Misc**
 - a JWT interface to create easily JWT token if needed
 
+## How to add a new entity
+
+Adding a new entity is really straightforward and should only require very specific independent steps : 
+- Add the entity in the migration / model (under the PG folder.)
+- Add the corresponding part in the root of the project (corresponding to the controller)
+- Finally add the corresponding endpoints in the HTTP part
+_More detailled version to come..._
+
 ## Other
 
 The code is tested from end-to-end and should be usable as is to start a new project.
